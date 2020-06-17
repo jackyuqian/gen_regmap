@@ -21,16 +21,20 @@ def read_csv(fcsv, delimiter=','):
         ##  regmap  = [ 
         ##      {
         ##          'Name'      : 'xxx',    (str)
-        ##          'Address'   : 'xxx',    (str) 
+        ##          'Address'   : xxx,      (int) 
         ##          'Field'     : [{
         ##                      'Name'      : 'xxx',    (str)
         ##                      'Msb'       : xxx,      (int) 
         ##                      'Lsb'       : xxx,      (int)
         ##                      'Length'    : xxx,      (int)
-        ##                      'Access'    : 'xxx',    (str)
+        ##                      'Access'    : 'xxx',    (str, lower case)
         ##                      'Reset'     : 'xxx',    (str) 
         ##                      'Doc'       : 'xxx'     (str) 
-        ##                      }, {...}, ...]
+        ##                      }, 
+        ##                      {...},
+        ##                      ...
+        ##                      {...},
+        ##                      ]
         ##      },
         ##      {...},
         ##      ...
@@ -40,18 +44,18 @@ def read_csv(fcsv, delimiter=','):
         regmap  = []
 
         for row in dict_csv:
-            print(row['Field'])
             if row['Address'].strip() != '':
                 bits        = row['Bits'].strip().replace('[','').replace(']','').split(':')
+                reg_name    = row['Register'].strip() if row['Register'].strip() != '' else 'reg_' + row['Address'].strip()
                 register    = {
-                        'Name'      : (row['Register'].strip() if row['Register'].strip() != '' else 'reg_' + row['Address'].strip()),
-                        'Address'   : row['Address'].strip(),
+                        'Name'      : reg_name,
+                        'Address'   : int(row['Address'].strip(), 16),
                         'Field'     : [{
                             'Name'  : row['Field'].strip(),
                             'Msb'   : int(bits[0]),
                             'Lsb'   : int(bits[1]),
                             'Length': (int(bits[0]) - int(bits[1]) + 1),
-                            'Access': row['Access'].strip(),
+                            'Access': row['Access'].strip().lower(),
                             'Reset' : row['Reset'].strip(),
                             'Doc'   : row['Doc']
                             }]
@@ -63,13 +67,70 @@ def read_csv(fcsv, delimiter=','):
                         'Msb'   : int(bits[0]),
                         'Lsb'   : int(bits[1]),
                         'Length': (int(bits[0]) - int(bits[1]) + 1),
-                        'Access': row['Access'].strip(),
+                        'Access': row['Access'].strip().lower(),
                         'Reset' : row['Reset'].strip(),
                         'Doc'   : row['Doc']
                         }
                 regmap[-1]['Field'].append(field)
         return regmap
 
+def write_verilog(regmap, frtl, data_bw, addr_bw):
+    ## Head
+    txt =  "module " + frtl.split('.')[0] + " (\n"
+    txt += "    input               pclk,\n"
+    txt += "    input               prstn,\n"
+    txt += "    input       [11 :0] paddr,\n"
+    txt += "    input       [31 :0] pwdata,\n"
+    txt += "    input               pwrite,\n"
+    txt += "    input               psel,\n"
+    txt += "    input               penable,\n"
+    txt += "    output  reg [31 :0] prdata\n"
+    txt += ");\n"
+
+    ## Declaration
+    for register in regmap:
+        for field in register['Field']:
+            if field['Name'] not in ['RSVD', 'Reserved']:
+                txt += "reg [%d :0]\t%s;\n" % (field['Length'] - 1, register['Name'] + '_' + field['Name'])
+    txt += "\n"
+
+    ## Read Logic
+    txt += "always@(posedge pclk and negedge prstn) begin\n"
+    txt += "    if(~prstn)\n"
+    txt += "        prdata  <= 'h0;\n"
+    txt += "    else\n"
+    txt += "        case(paddr)\n"
+    for register in regmap:
+        txt += "            %d'h%x:    prdata <= {" % (addr_bw, register['Address'])
+        for field in register['Field']:
+            if field['Name'] in ['RSVD', 'Reserved']:
+                txt += "%d'h0," % field['Length']
+            else:
+                txt += field['Name'] + ","
+        txt = txt[:-1]
+        txt += "};\n"
+    txt += "            default:    prdata  <= %d'hDEADBEEF;\n" % data_bw
+    txt += "        endcase\n"
+    txt += "end\n"
+    txt += "\n"
+
+    ## Modified Logic
+    for register in regmap:
+        for field in register['Field']:
+            if field['Access'] == 'rw':
+                txt += "always@(posedge pclk and negedge prstn) begin\n"
+                txt += "    if(~prstn)\n"
+                txt += "        %s  <= %s;\n" % (register['Name'] + '_' + field['Name'], field['Reset'])
+                txt += "    else if(psel && penable && pwrite && (paddr == %d'h%x))\n" % (addr_bw, register['Address'])
+                txt += "        %s  <= pwdata;\n" % (register['Name'] + '_' + field['Name'])
+                txt += "end\n\n"
+
+    ## Tail
+    txt += 'endmodule\n'
+
+    with open(frtl, 'w') as fp:
+        print(txt, file=fp)
+        print(txt)
 
 def print_help():
     print('Oh!')
@@ -95,7 +156,7 @@ def main(argv):
     
     ## Main Flow
     regmap  = read_csv(fcsv)
-    print(regmap)
+    write_verilog(regmap, frtl, 32, 12)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
