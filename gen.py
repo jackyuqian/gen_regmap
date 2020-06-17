@@ -50,28 +50,18 @@ def read_csv(fcsv, delimiter=','):
                 register    = {
                         'Name'      : reg_name,
                         'Address'   : int(row['Address'].strip(), 16),
-                        'Field'     : [{
-                            'Name'  : row['Field'].strip(),
-                            'Msb'   : int(bits[0]),
-                            'Lsb'   : int(bits[1]),
-                            'Length': (int(bits[0]) - int(bits[1]) + 1),
-                            'Access': row['Access'].strip().lower(),
-                            'Reset' : row['Reset'].strip(),
-                            'Doc'   : row['Doc']
-                            }]
+                        'Field'     : []
                         }
                 regmap.append(register)
-            else:
-                field   = {
-                        'Name'  : row['Field'].strip(),
-                        'Msb'   : int(bits[0]),
-                        'Lsb'   : int(bits[1]),
-                        'Length': (int(bits[0]) - int(bits[1]) + 1),
-                        'Access': row['Access'].strip().lower(),
-                        'Reset' : row['Reset'].strip(),
-                        'Doc'   : row['Doc']
-                        }
-                regmap[-1]['Field'].append(field)
+            regmap[-1]['Field'].append({
+                    'Name'  : row['Field'].strip(),
+                    'Msb'   : int(bits[0]),
+                    'Lsb'   : int(bits[1]),
+                    'Length': (int(bits[0]) - int(bits[1]) + 1),
+                    'Access': row['Access'].strip().lower(),
+                    'Reset' : row['Reset'].strip(),
+                    'Doc'   : row['Doc']
+                    })
         return regmap
 
 def write_verilog(regmap, frtl, data_bw, addr_bw):
@@ -97,7 +87,7 @@ def write_verilog(regmap, frtl, data_bw, addr_bw):
     ## Read Logic
     txt += "always@(posedge pclk and negedge prstn) begin\n"
     txt += "    if(~prstn)\n"
-    txt += "        prdata  <= 'h0;\n"
+    txt += "        prdata  <= %d'h0;\n" % data_bw
     txt += "    else\n"
     txt += "        case(paddr)\n"
     for register in regmap:
@@ -117,23 +107,47 @@ def write_verilog(regmap, frtl, data_bw, addr_bw):
     ## Modified Logic
     for register in regmap:
         for field in register['Field']:
-            if field['Access'] == 'rw':
-                txt += "always@(posedge pclk and negedge prstn) begin\n"
-                txt += "    if(~prstn)\n"
-                txt += "        %s  <= %s;\n" % (register['Name'] + '_' + field['Name'], field['Reset'])
+            if field['Name'] in ['RSVD', 'Reserved']:
+                continue
+            if field['Access'] in ['ro']:
+                continue
+            if field['Access'] not in ['rw', 'wo', 'rc', 'rs', 'w1c', 'w1s']:
+                print('[ERROR] Unrecognized Access Code: %s!' % field['Access'])
+                sys.exit()
+            regname =register['Name'] + '_' + field['Name']
+            txt     += "always@(posedge pclk and negedge prstn) begin\n"
+            txt     += "    if(~prstn)\n"
+            txt     += "        %s  <= %s;\n" % (regname, field['Reset'])
+            if field['Access'] in ['rw', 'wo']:
                 txt += "    else if(psel && penable && pwrite && (paddr == %d'h%x))\n" % (addr_bw, register['Address'])
-                txt += "        %s  <= pwdata;\n" % (register['Name'] + '_' + field['Name'])
+                txt += "        %s  <= pwdata[%d:%d];\n" % (regname, field['Msb'], field['Lsb'])
                 txt += "end\n\n"
+            elif field['Access'] == 'rc':
+                txt += "    else if(psel && penable && (!pwrite) && (paddr == %d'h%x))\n" % (addr_bw, register['Address'])
+                txt += "        %s  <= %d'h0;\n" % (regname, field['Length'])
+                txt += "end\n\n"
+            elif field['Access'] == 'rs':
+                txt += "    else if(psel && penable && (!pwrite) && (paddr == %d'h%x))\n" % (addr_bw, register['Address'])
+                txt += "        %s  <= %d'h%s;\n" % (regname, field['Length'], hex(2**field['Length']-1)[2:].upper())
+                txt += "end\n\n"
+            elif field['Access'] == 'w1c':
+                txt += "    else if(psel && penable && (pwrite) && (paddr == %d'h%x))\n" % (addr_bw, register['Address'])
+                txt += "        %s  <= %s & (~pwdata[%d:%d]);\n" % (regname, regname, field['Msb'], field['Lsb'])
+                txt += "end\n\n"
+            elif field['Access'] == 'w1s':
+                txt += "    else if(psel && penable && (pwrite) && (paddr == %d'h%x))\n" % (addr_bw, register['Address'])
+                txt += "        %s  <= %s | pwdata[%d:%d];\n" % (regname, regname, field['Msb'], field['Lsb'])
+                txt += "end\n\n"
+
 
     ## Tail
     txt += 'endmodule\n'
 
     with open(frtl, 'w') as fp:
         print(txt, file=fp)
-        print(txt)
 
 def print_help():
-    print('Oh!')
+    print('./gen.py -i <csv file> -o <rtl file>')
     
 def main(argv):
     fcsv    = 'default.csv'

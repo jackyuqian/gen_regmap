@@ -1,4 +1,4 @@
-module default (
+module example (
     input               pclk,
     input               prstn,
     input       [11 :0] paddr,
@@ -19,7 +19,7 @@ reg [15 :0]	ch_fir_coef_0_cfir_ceof0;
 
 always@(posedge pclk and negedge prstn) begin
     if(~prstn)
-        prdata  <= 'h0;
+        prdata  <= 32'h0;
     else
         case(paddr)
             12'h300:    prdata <= {func_reg1,func_reg2,16'h0,func3_reg3};
@@ -33,21 +33,49 @@ always@(posedge pclk and negedge prstn) begin
     if(~prstn)
         r0_func_reg1  <= 8'h0;
     else if(psel && penable && pwrite && (paddr == 12'h300))
-        r0_func_reg1  <= pwdata;
+        r0_func_reg1  <= pwdata[31:16];
+end
+
+always@(posedge pclk and negedge prstn) begin
+    if(~prstn)
+        r0_func3_reg3  <= 7'h3F;
+    else if(psel && penable && pwrite && (paddr == 12'h300))
+        r0_func3_reg3  <= pwdata[31:16];
+end
+
+always@(posedge pclk and negedge prstn) begin
+    if(~prstn)
+        reg_0x304_func_reg1  <= 8'hff;
+    else if(psel && penable && (pwrite) && (paddr == 12'h304))
+        reg_0x304_func_reg1  <= reg_0x304_func_reg1 & (~pwdata[31:24]);
+end
+
+always@(posedge pclk and negedge prstn) begin
+    if(~prstn)
+        reg_0x304_func_reg2  <= 8'h0;
+    else if(psel && penable && (!pwrite) && (paddr == 12'h304))
+        reg_0x304_func_reg2  <= 8'hFF;
+end
+
+always@(posedge pclk and negedge prstn) begin
+    if(~prstn)
+        reg_0x304_func3  <= 8'h0;
+    else if(psel && penable && (!pwrite) && (paddr == 12'h304))
+        reg_0x304_func3  <= 8'hFF;
 end
 
 always@(posedge pclk and negedge prstn) begin
     if(~prstn)
         ch_fir_coef_0_cfir_ceof1  <= 16'h0;
     else if(psel && penable && pwrite && (paddr == 12'h308))
-        ch_fir_coef_0_cfir_ceof1  <= pwdata;
+        ch_fir_coef_0_cfir_ceof1  <= pwdata[31:16];
 end
 
 always@(posedge pclk and negedge prstn) begin
     if(~prstn)
         ch_fir_coef_0_cfir_ceof0  <= 16'h10;
     else if(psel && penable && pwrite && (paddr == 12'h308))
-        ch_fir_coef_0_cfir_ceof0  <= pwdata;
+        ch_fir_coef_0_cfir_ceof0  <= pwdata[31:16];
 end
 
 endmodule
