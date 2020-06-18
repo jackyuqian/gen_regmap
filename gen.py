@@ -69,12 +69,14 @@ def write_verilog(regmap, frtl, data_bw, addr_bw):
     txt =  "module " + frtl.split('.')[0] + " (\n"
     txt += "    input               pclk,\n"
     txt += "    input               prstn,\n"
-    txt += "    input       [11 :0] paddr,\n"
-    txt += "    input       [31 :0] pwdata,\n"
+    txt += "    input       [%d :0] paddr,\n"   % (addr_bw - 1)
+    txt += "    input       [%d :0] pwdata,\n"  % (data_bw - 1)
     txt += "    input               pwrite,\n"
     txt += "    input               psel,\n"
     txt += "    input               penable,\n"
-    txt += "    output  reg [31 :0] prdata\n"
+    txt += "    output              pready,\n"
+    txt += "    input       [%d :0] pstrb,\n"   % int(data_bw / 8 - 1)
+    txt += "    output  reg [%d :0] prdata\n"   % (data_bw - 1)
     txt += ");\n"
 
     ## Declaration
@@ -83,6 +85,16 @@ def write_verilog(regmap, frtl, data_bw, addr_bw):
             if field['Name'] not in ['RSVD', 'Reserved']:
                 txt += "reg [%d :0]\t%s;\n" % (field['Length'] - 1, register['Name'] + '_' + field['Name'])
     txt += "\n"
+    
+    ## Misc Logic
+    mask_str    = "{"
+    for i in range(int(data_bw / 8))[::-1]:
+        mask_str    += "{8{pstrb[%d]}}," % i
+    mask_str    = mask_str[:-1] + "}"
+    txt += "assign  pready      = 1'b1;\n"
+    txt += "wire    pwdata_msk  = %s;\n" % mask_str
+    txt += "wire    write_en    = psel && penable && pwrite;\n"
+    txt += "wire    read_en     = psel && penable && (!pwrite);\n\n"
 
     ## Read Logic
     txt += "always@(posedge pclk and negedge prstn) begin\n"
@@ -115,27 +127,28 @@ def write_verilog(regmap, frtl, data_bw, addr_bw):
                 print('[ERROR] Unrecognized Access Code: %s!' % field['Access'])
                 sys.exit()
             regname =register['Name'] + '_' + field['Name']
+
             txt     += "always@(posedge pclk and negedge prstn) begin\n"
             txt     += "    if(~prstn)\n"
             txt     += "        %s  <= %s;\n" % (regname, field['Reset'])
             if field['Access'] in ['rw', 'wo']:
-                txt += "    else if(psel && penable && pwrite && (paddr == %d'h%x))\n" % (addr_bw, register['Address'])
+                txt += "    else if(write_en && (paddr == %d'h%x) && (&(pwdata_msk[%d:%d])))\n" % (addr_bw, register['Address'], field['Msb'], field['Lsb'])
                 txt += "        %s  <= pwdata[%d:%d];\n" % (regname, field['Msb'], field['Lsb'])
                 txt += "end\n\n"
             elif field['Access'] == 'rc':
-                txt += "    else if(psel && penable && (!pwrite) && (paddr == %d'h%x))\n" % (addr_bw, register['Address'])
+                txt += "    else if(read_en && (paddr == %d'h%x))\n" % (addr_bw, register['Address'])
                 txt += "        %s  <= %d'h0;\n" % (regname, field['Length'])
                 txt += "end\n\n"
             elif field['Access'] == 'rs':
-                txt += "    else if(psel && penable && (!pwrite) && (paddr == %d'h%x))\n" % (addr_bw, register['Address'])
+                txt += "    else if(read_en && (paddr == %d'h%x))\n" % (addr_bw, register['Address'])
                 txt += "        %s  <= %d'h%s;\n" % (regname, field['Length'], hex(2**field['Length']-1)[2:].upper())
                 txt += "end\n\n"
             elif field['Access'] == 'w1c':
-                txt += "    else if(psel && penable && (pwrite) && (paddr == %d'h%x))\n" % (addr_bw, register['Address'])
+                txt += "    else if(write_en && (paddr == %d'h%x) && (&(pwdata_msk[%d:%d])))\n" % (addr_bw, register['Address'], field['Msb'], field['Lsb'])
                 txt += "        %s  <= %s & (~pwdata[%d:%d]);\n" % (regname, regname, field['Msb'], field['Lsb'])
                 txt += "end\n\n"
             elif field['Access'] == 'w1s':
-                txt += "    else if(psel && penable && (pwrite) && (paddr == %d'h%x))\n" % (addr_bw, register['Address'])
+                txt += "    else if(write_en && (paddr == %d'h%x) && (&(pwdata_msk[%d:%d])))\n" % (addr_bw, register['Address'], field['Msb'], field['Lsb'])
                 txt += "        %s  <= %s | pwdata[%d:%d];\n" % (regname, regname, field['Msb'], field['Lsb'])
                 txt += "end\n\n"
 
