@@ -45,7 +45,6 @@ def read_csv(fcsv, delimiter=','):
 
         for row in dict_csv:
             if row['Address'].strip() != '':
-                bits        = row['Bits'].strip().replace('[','').replace(']','').split(':')
                 reg_name    = row['Register'].strip() if row['Register'].strip() != '' else 'reg_' + row['Address'].strip()
                 register    = {
                         'Name'      : reg_name,
@@ -53,11 +52,12 @@ def read_csv(fcsv, delimiter=','):
                         'Field'     : []
                         }
                 regmap.append(register)
+            bits        = row['Bits'].strip().replace('[','').replace(']','').split(':')
             regmap[-1]['Field'].append({
                     'Name'  : row['Field'].strip(),
                     'Msb'   : int(bits[0]),
-                    'Lsb'   : int(bits[1]),
-                    'Length': (int(bits[0]) - int(bits[1]) + 1),
+                    'Lsb'   : int(bits[1]) if len(bits) == 2 else bits[0],
+                    'Length': (int(bits[0]) - int(bits[1]) + 1) if len(bits) == 2 else 1,
                     'Access': row['Access'].strip().lower(),
                     'Reset' : row['Reset'].strip(),
                     'Doc'   : row['Doc']
