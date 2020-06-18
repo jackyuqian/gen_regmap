@@ -2,7 +2,7 @@
 import csv, sys, getopt, json
 
 def print_usage():
-    print('./parse_csv.py -i <csv file> -o <json file> -d <delimiter> -b <data_bw>')
+    print('./parse_csv.py -i <csv file> -o <json file> -b <delimiter> -d <data_bw>')
 
 def get_addr_lst(s, step):
     # s="xx; xx-xx"
@@ -54,7 +54,7 @@ def parse_csv(fcsv, data_bw, delimiter = ','):
 
         bits    = row['Bits'].strip().replace('[','').replace(']','').split(':')
         for idx in range(len(address_lst)):
-            regmap[0-idx]['Field'].append({
+            regmap[-1-idx]['Field'].append({
                     'Name'  : row['Field'].strip(),
                     'Msb'   : int(bits[0]),
                     'Lsb'   : int(bits[1]) if len(bits) == 2 else bits[0],
@@ -86,9 +86,9 @@ def main(argv):
             fcsv        = arg
         elif opt in ("-o"):
             fjson       = arg
-        elif opt in ("-d"):
-            delimiter   = arg
         elif opt in ("-b"):
+            delimiter   = arg
+        elif opt in ("-d"):
             data_bw     = arg
     
     if fcsv == '':
