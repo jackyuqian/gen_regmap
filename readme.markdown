@@ -1,3 +1,7 @@
+# Usage
+
+* Start with "#" for comments.
+
 # Internal Data Structure
 ```
 regmap  = [ 
