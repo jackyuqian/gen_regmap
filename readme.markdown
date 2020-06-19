@@ -29,11 +29,11 @@ regmap  = [
 ```
 # Access Attribute
 |Supported  |Access     |Write                                                          |Read               |
-|---        |---        |---                                                            |---                |
-|v       	|RO	        |no effect                                                      |no effect          |
-|v       	|RW	        |as-is                                                          |no effect          |
-|v       	|RC	        |no effect                                                      |clears all bits    |
-|v       	|RS	        |no effect                                                      |sets all bits      |
+|:---       |:---       |:---                                                           |:---               |
+|Y       	|RO	        |no effect                                                      |no effect          |
+|Y       	|RW	        |as-is                                                          |no effect          |
+|Y       	|RC	        |no effect                                                      |clears all bits    |
+|Y       	|RS	        |no effect                                                      |sets all bits      |
 |        	|RU	        |                                                               |                   |
 |        	|WRC	    |as-is                                                          |clears all bits    |
 |        	|WRS	    |as-is                                                          |sets all bits      |
@@ -41,8 +41,8 @@ regmap  = [
 |        	|WS	        |sets all bits                                                  |no effect          |
 |        	|WSRC	    |sets all bits                                                  |clears all bits    |
 |        	|WCRS	    |clears all bits                                                |sets all bits      |
-|v       	|W1C	    |1/0 clears/no effect on matching bit                           |no effect          |
-|v       	|W1S	    |1/0 sets/no effect on matching bit                             |no effect          |
+|Y       	|W1C	    |1/0 clears/no effect on matching bit                           |no effect          |
+|Y       	|W1S	    |1/0 sets/no effect on matching bit                             |no effect          |
 |        	|W1T	    |1/0 toggles/no effect on matching bit                          |no effect          |
 |        	|W0C	    |1/0 no effect on/clears matching bit                           |no effect          |
 |        	|W0S	    |1/0 no effect on/sets matching bit                             |no effect          |
