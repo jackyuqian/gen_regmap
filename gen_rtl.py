@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3 -B
 import json, sys, getopt
 
 def gen_rtl(regmap, module_name, data_bw, addr_bw):
@@ -131,7 +131,7 @@ def main(argv):
     ## Main Flow
     with open(fjson, 'r') as fp:
         regmap  = json.load(fp)
-        rtl_txt = gen_rtl(regmap, module_name, data_bw, addr_bw)
+    rtl_txt = gen_rtl(regmap, module_name, data_bw, addr_bw)
     with open(frtl, 'w') as fp:
         print(rtl_txt, file=fp)
 

@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3 -B
 import csv, sys, getopt, json
 
 def print_usage():
@@ -18,24 +18,23 @@ def get_addr_lst(s, step):
             print('[ERROR] Format of Address is wrong!')
     return addr_lst
 
-def pre_proc(fcsv, delimiter = ','):
-    with open(fcsv, 'r', encoding='UTF-8-sig') as fp:
-        lines   = []
-        for line in fp:
-            # Delete spaces
-            line    = line.strip()
-            # Delete comments
-            if line.startswith('#'):
-                continue
-            # Delete empty rows
-            if line.replace(delimiter, '').strip() == '':
-                continue
-            lines.append(line)
-        dict_csv    = csv.DictReader(lines)
-        return dict_csv
+def pre_proc(fp_csv, delimiter = ','):
+    lines   = []
+    for line in fp_csv:
+        # Delete spaces
+        line    = line.strip()
+        # Delete comments
+        if line.startswith('#'):
+            continue
+        # Delete empty rows
+        if line.replace(delimiter, '').strip() == '':
+            continue
+        lines.append(line)
+    dict_csv    = csv.DictReader(lines)
+    return dict_csv
 
-def parse_csv(fcsv, data_bw, delimiter = ','):
-    dict_csv    = pre_proc(fcsv, delimiter)
+def parse_csv(fp_csv, data_bw, delimiter = ','):
+    dict_csv    = pre_proc(fp_csv, delimiter)
     regmap      = []
     for row in dict_csv:
         if row['Address'].strip()!= '':
@@ -97,7 +96,8 @@ def main(argv):
         fjson   = fcsv.split('.')[0] + '.json'
 
     ## Main Flow
-    regmap  = parse_csv(fcsv, data_bw, delimiter)
+    with open(fcsv, 'r', encoding = 'utf-8-sig') as fp:
+        regmap  = parse_csv(fp, data_bw, delimiter)
     with open(fjson, 'w') as fp:
         json.dump(regmap, fp)
 
