@@ -88,7 +88,7 @@ def main(argv):
         elif opt in ("-b"):
             delimiter   = arg
         elif opt in ("-d"):
-            data_bw     = arg
+            data_bw     = int(arg)
     
     if fcsv == '':
         fcsv    = 'default.csv'

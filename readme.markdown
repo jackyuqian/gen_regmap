@@ -1,5 +1,9 @@
 # Usage
+* Convert CSV to RTL:
+`./csv2rtl.py -i <csv file> -o <rtl file> -b <delimiter> -d <data_bw> -a <addr_bw>`
 
+# Format of CSV
+* See example.csv
 * Start with "#" for comments.
 
 # Internal Data Structure

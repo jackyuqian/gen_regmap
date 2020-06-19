@@ -118,9 +118,9 @@ def main(argv):
         elif opt in ("-o"):
             frtl       = arg
         elif opt in ("-d"):
-            data_bw     = arg
+            data_bw     = int(arg)
         elif opt in ("-a"):
-            addr_bw     = arg
+            addr_bw     = int(arg)
     
     if fjson == '':
         fjson   = 'default.json'

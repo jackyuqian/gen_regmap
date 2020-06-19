@@ -3,6 +3,9 @@ import  sys, getopt
 from    parse_csv   import *
 from    gen_rtl     import *
 
+def print_usage():
+    print('./csv2rtl.py -i <csv file> -o <rtl file> -b <delimiter> -d <data_bw> -a <addr_bw>')
+
 def main(argv):
     # Get Arguments
     fcsv        = ''
@@ -25,11 +28,11 @@ def main(argv):
         elif opt in ("-o"):
             frtl       = arg
         elif opt in ("-d"):
-            data_bw     = arg
+            data_bw     = int(arg)
         elif opt in ("-a"):
-            addr_bw     = arg
+            addr_bw     = int(arg)
         elif opt in ("-b"):
-            delimter    = arg
+            delimiter   = arg
     
     if fcsv == '':
         fcsv    = 'default.csv'
