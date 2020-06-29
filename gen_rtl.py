@@ -41,12 +41,21 @@ def gen_rtl(regmap, module_name, data_bw, addr_bw):
     txt += "        case(paddr)\n"
     for register in regmap:
         txt += "            %d'h%x:    prdata <= {" % (addr_bw, register['Address'])
-        for field in register['Field']:
-            regname =register['Name'] + '_' + field['Name']
-            if field['Name'] in ['RSVD', 'Reserved']:
-                txt += "%d'h0," % field['Length']
-            else:
-                txt += regname + ","
+        idx_bit = data_bw - 1
+        while idx_bit > 0:
+            field_found = False
+            for field in register['Field']:
+                if idx_bit <= field['Msb'] and idx_bit >= field['Lsb']:
+                    regname =register['Name'] + '_' + field['Name']
+                    if field['Name'] in ['RSVD', 'Reserved']:
+                        txt += "%d'h0," % field['Length']
+                    else:
+                        txt += regname + ","
+                    idx_bit = field['Lsb'] - 1
+                    field_found = True
+            if field_found is False:
+                txt += "1'b0,"
+                idx_bit = idx_bit - 1
         txt = txt[:-1]
         txt += "};\n"
     txt += "            default:    prdata  <= %d'hDEADBEEF;\n" % data_bw

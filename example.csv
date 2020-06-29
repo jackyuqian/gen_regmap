@@ -1,8 +1,8 @@
 ﻿Address,Register,Field,Bits,Access,Reset,Doc
-0x300,r0,func_reg1,[31:16],RW,8'h0,
- ,,func_reg2,[16:10],RO,,
-,,Reserved,[9:6],,,
-,,func3_reg3,[5:0],WO,7'h3F,
+0x300,r0,func3_reg3,[5:0],WO,7'h3F,
+#,,Reserved,[9:6],,,
+,,func_reg2,[16:10],RO,,
+,,func_reg1,[31:16],RW,8'h0,
 0x304,,func_reg1,[31:24],W1C,8'hff,
 ,,func_reg2,[23:16],RS,8'h0,
 ,,RSVD,[15:8],,,
