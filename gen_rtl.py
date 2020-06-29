@@ -42,7 +42,7 @@ def gen_rtl(regmap, module_name, data_bw, addr_bw):
     for register in regmap:
         txt += "            %d'h%x:    prdata <= {" % (addr_bw, register['Address'])
         idx_bit = data_bw - 1
-        while idx_bit > 0:
+        while idx_bit >= 0:
             field_found = False
             for field in register['Field']:
                 if idx_bit <= field['Msb'] and idx_bit >= field['Lsb']:

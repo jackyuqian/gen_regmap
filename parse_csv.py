@@ -56,7 +56,7 @@ def parse_csv(fp_csv, data_bw, delimiter = ','):
             regmap[-1-idx]['Field'].append({
                     'Name'  : row['Field'].strip(),
                     'Msb'   : int(bits[0]),
-                    'Lsb'   : int(bits[1]) if len(bits) == 2 else bits[0],
+                    'Lsb'   : int(bits[1]) if len(bits) == 2 else int(bits[0]),
                     'Length': (int(bits[0]) - int(bits[1]) + 1) if len(bits) == 2 else 1,
                     'Access': row['Access'].strip().upper(),
                     'Reset' : row['Reset'].strip(),
