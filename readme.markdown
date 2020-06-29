@@ -13,6 +13,7 @@ regmap  = [
     {
         "Name"      : "xxx",    			(str)
         "Address"   : xxx,      			(int) 
+        "GroupIdx"  : xxx,      			(int, -1:Single, Other:Group)
         "Field"     : [{
                     "Name"      : "xxx",    (str)
                     "Msb"       : xxx,      (int) 

@@ -20,7 +20,9 @@ def gen_rtl(regmap, module_name, data_bw, addr_bw):
     for register in regmap:
         for field in register['Field']:
             if field['Name'] not in ['RSVD', 'Reserved']:
-                txt += "reg [%d :0]\t%s;\n" % (field['Length'] - 1, register['Name'] + '_' + field['Name'])
+                # regname =register['Name'] + '_' + field['Name']
+                regname = field['Name'] + ('' if register['GroupIdx'] == -1 else ('[' + str(register['GroupIdx']) + ']')) 
+                txt += "reg [%d :0]\t%s;\n" % (field['Length'] - 1, regname)
     txt += "\n"
     
     ## Misc Logic
@@ -46,7 +48,8 @@ def gen_rtl(regmap, module_name, data_bw, addr_bw):
             field_found = False
             for field in register['Field']:
                 if idx_bit <= field['Msb'] and idx_bit >= field['Lsb']:
-                    regname =register['Name'] + '_' + field['Name']
+                    # regname =register['Name'] + '_' + field['Name']
+                    regname = field['Name'] + ('' if register['GroupIdx'] == -1 else ('[' + str(register['GroupIdx']) + ']')) 
                     if field['Name'] in ['RSVD', 'Reserved']:
                         txt += "%d'h0," % field['Length']
                     else:
@@ -73,7 +76,8 @@ def gen_rtl(regmap, module_name, data_bw, addr_bw):
             if field['Access'] not in ['RW', 'WO', 'RC', 'RS', 'W1C', 'W1S']:
                 print('[ERROR] Unrecognized Access Code: %s!' % field['Access'])
                 sys.exit()
-            regname =register['Name'] + '_' + field['Name']
+            # regname = register['Name'] + '_' + field['Name']
+            regname = field['Name'] + ('' if register['GroupIdx'] == -1 else ('[' + str(register['GroupIdx']) + ']')) 
 
             txt     += "always@(posedge pclk and negedge prstn) begin\n"
             txt     += "    if(~prstn)\n"

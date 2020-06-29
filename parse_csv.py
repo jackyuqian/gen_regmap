@@ -48,6 +48,7 @@ def parse_csv(fp_csv, data_bw, delimiter = ','):
                 regmap.append({
                         'Name'      : register,
                         'Address'   : address,
+                        'GroupIdx'  : idx if len(address_lst) > 1 else -1,
                         'Field'     : []
                         })
 
