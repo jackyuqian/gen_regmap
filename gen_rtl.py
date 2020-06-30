@@ -36,7 +36,7 @@ def gen_rtl(regmap, module_name, data_bw, addr_bw):
     txt += "wire    read_en     = psel && penable && (!pwrite);\n\n"
 
     ## Read Logic
-    txt += "always@(posedge pclk and negedge prstn) begin\n"
+    txt += "always@(posedge pclk or negedge prstn) begin\n"
     txt += "    if(~prstn)\n"
     txt += "        prdata  <= %d'h0;\n" % data_bw
     txt += "    else\n"
@@ -79,7 +79,7 @@ def gen_rtl(regmap, module_name, data_bw, addr_bw):
             # regname = register['Name'] + '_' + field['Name']
             regname = field['Name'] + ('' if register['GroupIdx'] == -1 else ('[' + str(register['GroupIdx']) + ']')) 
 
-            txt     += "always@(posedge pclk and negedge prstn) begin\n"
+            txt     += "always@(posedge pclk or negedge prstn) begin\n"
             txt     += "    if(~prstn)\n"
             txt     += "        %s  <= %s;\n" % (regname, field['Reset'])
             if field['Access'] in ['RW', 'WO']:
