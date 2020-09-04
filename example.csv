@@ -1,7 +1,7 @@
 ﻿Address,Register,Field,Bits,Access,Reset,Doc
-0x000,ctrl,opcode,[1:0],RW,2'b00,"0:+,1:-,2:*,3:None"
+0x000,ctrl,opcode,[1:0],RW,2'b10,"0:+,1:-,2:*,3:None"
 ,,Reserved,[9:6],,,
-0x004,coef,op0,[7:0],RW,8;h0,
+0x004-0x010,coef,op0,[7:0],RW,8'h0,
 ,,RSVD,[15:8],RW,,
 ,,op1,[23:16],RW,8'h0,
 ,,RSVD,[31:24],RW,,
