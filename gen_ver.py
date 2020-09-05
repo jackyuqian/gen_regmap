@@ -1,12 +1,15 @@
 #!/usr/bin/python3 -B
 import json, sys, getopt
 
-def gen_ver(regmap, fver, data_bw, addr_bw):
+def gen_ver(regmap, fver, data_bw, addr_bw, addr_offset):
     ## Read Logic
     txt = '"%s": begin\n\n' % (fver.split('.')[0])
+    txt += '    bit [31 :0] addr_offset;\n'
+    txt += '    addr_offset = %s;\n' % addr_offset
+    txt += '    pass_flag   = "pass";\n\n'
     for register in regmap:
         txt += "    // %s\n" % (register['Name'])
-        txt += "    if_ahblite.read(%d'h%x, value32);\n" % (addr_bw, register['Address'])
+        txt += "    if_ahblite.read(addr_offset + %d'h%x, value32);\n" % (addr_bw, register['Address'])
         idx_bit = data_bw - 1
         txt_dv  = "{" # Default Value
         while idx_bit >= 0:

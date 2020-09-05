@@ -5,7 +5,7 @@ from    gen_rtl     import *
 from    gen_ver     import *
 
 def print_usage():
-    print('./csv2rtl.py -i <csv file> -o <rtl file> -b <delimiter> -d <data_bw> -a <addr_bw>')
+    print('./csv2rtl.py -i <csv file> -o <rtl file> -b <delimiter> -d <data_bw> -a <addr_bw> -f <offset addr')
 
 def main(argv):
     # Get Arguments
@@ -15,6 +15,7 @@ def main(argv):
     data_bw     = 32
     addr_bw     = 12
     delimiter   = ','
+    addr_offset = "32'h0"
 
     try:
         opts, args    = getopt.getopt(argv,"hi:o:d:a:b:")
@@ -35,6 +36,8 @@ def main(argv):
             addr_bw     = int(arg)
         elif opt in ("-b"):
             delimiter   = arg
+        elif opt in ("-f"):
+            addr_offset = arg
     
     if fcsv == '':
         fcsv    = 'default.csv'
@@ -48,7 +51,7 @@ def main(argv):
         regmap  = parse_csv(fp, data_bw, delimiter)
     
     rtl_txt = gen_rtl(regmap, module_name, data_bw, addr_bw)
-    ver_txt = gen_ver(regmap, fver, data_bw, addr_bw)
+    ver_txt = gen_ver(regmap, fver, data_bw, addr_bw, addr_offset)
     
     with open(frtl, 'w') as fp:
         print(rtl_txt, file=fp)
