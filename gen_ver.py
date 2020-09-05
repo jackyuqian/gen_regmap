@@ -11,7 +11,7 @@ def gen_ver(regmap, module_name, data_bw, addr_bw):
     ## Read Logic
     for register in regmap:
         txt += "    // %s\n" % (register['Name'])
-        txt += "    if_apb_reg.read(%d'h%x, rdata);\n" % (addr_bw, register['Address'])
+        txt += "    if_ahblite.read(%d'h%x, value32);\n" % (addr_bw, register['Address'])
         idx_bit = data_bw - 1
         txt_dv  = "{" # Default Value
         while idx_bit >= 0:
@@ -30,9 +30,9 @@ def gen_ver(regmap, module_name, data_bw, addr_bw):
                 txt_dv += "1'b0,"
                 idx_bit = idx_bit - 1
         txt_dv =    txt_dv[:-1] + '}'
-        txt += "    if(rdata != %s) begin;\n" % txt_dv
-        txt += "        fail    = 1'b1;\n"
-        txt += '        $display("[ERROR] Addr = 0x%x, Rdata = ' %(register['Address']) + '0x%x", rdata);\n'
+        txt += "    if(value32 != %s) begin;\n" % txt_dv
+        txt += '        pass_flag = "fail";\n'
+        txt += '        $display("[ERROR] Rslt is wrong: ' + '0x%x!", value32);\n'
         txt += "    end;\n"
     txt += "\n"
 
