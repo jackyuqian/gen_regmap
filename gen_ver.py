@@ -8,6 +8,13 @@ def gen_ver(regmap, fver, data_bw, addr_bw, addr_offset):
     txt += '    addr_offset = %s;\n' % addr_offset
     txt += '    pass_flag   = "pass";\n\n'
     for register in regmap:
+        skip    = False
+        for field in register['Field']:
+            if field['Access'] in ['RO', 'RC', 'RS', 'ro', 'rc', 'rs']:
+                skip    = True
+        if skip is True:
+            continue
+            
         txt += "    // %s\n" % (register['Name'])
         txt += "    if_ahblite.read(addr_offset + %d'h%x, value32);\n" % (addr_bw, register['Address'])
         idx_bit = data_bw - 1
