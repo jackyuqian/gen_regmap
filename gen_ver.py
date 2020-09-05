@@ -1,14 +1,9 @@
 #!/usr/bin/python3 -B
 import json, sys, getopt
 
-def gen_ver(regmap, module_name, data_bw, addr_bw):
-    txt =  ""
-    txt += "bit [%d :0] rdata;\n" % (data_bw - 1)
-    txt += "bit         fail;\n"
-    txt += "fail    = 1'b0;\n"
-    txt =  "\n"
-
+def gen_ver(regmap, fver, data_bw, addr_bw):
     ## Read Logic
+    txt = '"%s": begin\n\n' % (fver.split('.')[0])
     for register in regmap:
         txt += "    // %s\n" % (register['Name'])
         txt += "    if_ahblite.read(%d'h%x, value32);\n" % (addr_bw, register['Address'])
@@ -30,21 +25,21 @@ def gen_ver(regmap, module_name, data_bw, addr_bw):
                 txt_dv += "1'b0,"
                 idx_bit = idx_bit - 1
         txt_dv =    txt_dv[:-1] + '}'
-        txt += "    if(value32 != %s) begin;\n" % txt_dv
+        txt += "    if(value32 != %s) begin\n" % txt_dv
         txt += '        pass_flag = "fail";\n'
         txt += '        $display("[ERROR] Rslt is wrong: ' + '0x%x!", value32);\n'
-        txt += "    end;\n"
-    txt += "\n"
+        txt += "    end\n\n"
+    txt += "end\n"
 
     return txt
 
 def print_usage():
-    print('./gen_rtl.py -i <json file> -o <rtl file> -d <data_bw> -a <addr_bw>')
+    print('./gen_ver.py -i <json file> -o <ver file> -d <data_bw> -a <addr_bw>')
     
 def main(argv):
     # Get Arguments
     fjson       = ''
-    frtl        = ''
+    fver        = ''
     data_bw     = 32
     addr_bw     = 12
 
@@ -60,7 +55,7 @@ def main(argv):
         elif opt in ("-i"):
             fjson       = arg
         elif opt in ("-o"):
-            frtl       = arg
+            fver       = arg
         elif opt in ("-d"):
             data_bw     = int(arg)
         elif opt in ("-a"):
@@ -68,16 +63,15 @@ def main(argv):
     
     if fjson == '':
         fjson   = 'default.json'
-    if frtl == '':
-        frtl    = fjson.split('.')[0] + '.v'
-    module_name = fjson.split('.')[0]
+    if fver == '':
+        ver    = fjson.split('.')[0] + '_default_value_case.v'
 
     ## Main Flow
     with open(fjson, 'r') as fp:
         regmap  = json.load(fp)
-    rtl_txt = gen_rtl(regmap, module_name, data_bw, addr_bw)
-    with open(frtl, 'w') as fp:
-        print(rtl_txt, file=fp)
+    ver_txt = gen_ver(regmap, fver, data_bw, addr_bw)
+    with open(fver, 'w') as fp:
+        print(ver_txt, file=fp)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
