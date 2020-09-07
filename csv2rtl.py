@@ -43,7 +43,7 @@ def main(argv):
         fcsv    = 'default.csv'
     if frtl == '':
         frtl    = fcsv.split('.')[0] + '.v'
-    fver    = frtl.split('.')[0] + '_default_value_case.v'
+    fver    = frtl.split('.')[0] + '_register_test.v'
     module_name = fcsv.split('.')[0]
 
     ## Main Flow
